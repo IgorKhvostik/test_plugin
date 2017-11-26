@@ -11,20 +11,15 @@ Author URI: http://страница_автора_плагина
 add_action('add_meta_boxes', 'metatest_init');
 add_action('save_post', 'metatest_save');
 
-function metatest_init()
-{
+function metatest_init(){
     add_meta_box('metatest', 'User information',
         'metatest_showup', 'post', 'side', 'high');
 }
 
-function metatest_showup($post)
-{
-
-// получение существующих метаданных
+function metatest_showup($post){
+// Retrieving of existing metadata
     $data = get_user_meta($post->post_author);
     $main_data = get_userdata($post->post_author);
-
-    //var_dump($data);
     $arr = array(
         'ID' => $post->post_author,
         'user_email' => $main_data->user_email,
@@ -35,46 +30,38 @@ function metatest_showup($post)
         'phone' => $data['phone'][0],
     );
 
-// скрытое поле с одноразовым кодом
+// Hidden field for security
     wp_nonce_field("metatest_action", "metatest_nonce");
 
-// поле с метаданными
+// Field with metadata
 
-    foreach ($arr as $k => $v) {
+    foreach ($arr as $k => $v){
         echo '<p>' . $k . ': <input type="text" name="' . $k . '" value="'
             . esc_attr($v) . '"/></p>';
     }
-
 }
 
-function metatest_save($postID)
-{
-    //var_dump($_POST);
+function metatest_save($postID){
     $post = get_post($postID);
     $author_id = $post->post_author;
-// пришло ли поле наших данных?
+
+// Check if data is got
     if (!isset($_POST))
         return "No data";
 
-// проверка достоверности запроса
-   if ( is_admin() && wp_verify_nonce($_POST['metatest_nonce'], "metatest_action")==1 || wp_verify_nonce($_POST['metatest_nonce'], "metatest_action") == 2){
-       update_user_meta($author_id, 'lang', $_POST['lang']);
-       update_user_meta($author_id, 'first_name', $_POST['first_name']);
-       update_user_meta($author_id, 'last_name', $_POST['last_name']);
-       update_user_meta($author_id, 'address', $_POST['address']);
-       update_user_meta($author_id, 'phone', $_POST['phone']);
-       wp_update_user(array(
-           'ID' => $author_id,
-           'user_email' => $_POST['user_email']
-       ));
-   }
-
-
-
-
-
-// запись
-
+// Verifying security field and save new metadata
+    if (is_admin() && wp_verify_nonce($_POST['metatest_nonce'], "metatest_action") == 1 || wp_verify_nonce($_POST['metatest_nonce'], "metatest_action") == 2) {
+        update_user_meta($author_id, 'lang', $_POST['lang']);
+        update_user_meta($author_id, 'first_name', $_POST['first_name']);
+        update_user_meta($author_id, 'last_name', $_POST['last_name']);
+        update_user_meta($author_id, 'address', $_POST['address']);
+        update_user_meta($author_id, 'phone', $_POST['phone']);
+        wp_update_user(array(
+            'ID' => $author_id,
+            'user_email' => $_POST['user_email']
+        ));
+    }
+    return true;
 }
 
 ?>
